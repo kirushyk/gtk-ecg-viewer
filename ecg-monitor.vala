@@ -35,7 +35,7 @@ public class ECGMonitor: Gtk.DrawingArea
 		start = 0;
 		end = 2;
 		ecg = ECG.open(path);
-		ecg.cache(first_cached_frame = 0, last_cached_frame = 2048);
+		ecg.cache(first_cached_frame = 0, last_cached_frame = 400);
 
 		first_frame = 0;
 		update();
@@ -56,22 +56,27 @@ public class ECGMonitor: Gtk.DrawingArea
 		return ecg.get_frames_count();
 	}
 
+	public int get_ecg_shift()
+	{
+		return first_frame;
+	}
+
 	public void set_ecg_shift(int shift)
 	{
 		first_frame = shift;
-		if ((first_frame > last_cached_frame) || (first_frame < first_cached_frame))
+		if ((first_frame + 3000 > last_cached_frame) || (first_frame < first_cached_frame))
 		{
 			int frames_count = ecg.get_frames_count();
 			first_cached_frame = first_frame - 10000;
+			last_cached_frame = first_frame + 10000;
 			if (first_cached_frame < 0)
 				first_cached_frame = 0;
-			if (first_cached_frame > frames_count);
+			if (first_cached_frame > frames_count)
 				first_cached_frame = frames_count;
 			if (last_cached_frame < 0)
 				last_cached_frame = 0;
-			if (last_cached_frame > frames_count);
+			if (last_cached_frame > frames_count)
 				last_cached_frame = frames_count;
-			last_cached_frame = first_frame + 10000;
 			ecg.cache(first_cached_frame, last_cached_frame);
 		}
 		update();
@@ -84,7 +89,7 @@ public class ECGMonitor: Gtk.DrawingArea
 
 		string channels_names[14] = 
 		{
-			"I", "II", "III", "V1", "V2", "V3", "V4", "V5", "V6", "aVR", "aVL", "aVF", "P", "0"
+			"I", "II", "III", "V1", "V2", "V3", "V4", "V5", "V6", "aVR", "aVL", "aVF", "Unknown Channel", "0"
 		};
 
 		float scale = 1.0f;
@@ -98,35 +103,47 @@ public class ECGMonitor: Gtk.DrawingArea
 
         	c.set_source_rgb(0.0, 0.0, 0.0);
 
-		c.move_to(40, 40);
-		c.show_text("Grid: 2 lines / mV, 1 line / 100 ms");
+		double magnitude_scale = 50.0f;
+		if (false)//  && (start == 0) || (start == 9))
+		{
+			c.move_to(40.0, 40.0);
+			c.show_text("250 μV ✕ 100 ms");
+			magnitude_scale = 100.0f;
+		}
+		else
+		{
+			c.move_to(40.0, 40.0);
+			c.show_text("0.5 mV ✕ 100 ms");
+		}
+
 
 		c.set_line_width(0.25);
-		for (double x = 0; x < width; x += 20.0)
+		for (double x = 0.5; x < width; x += 20.0)
 		{
 			c.move_to(x, 0);
 			c.line_to(x, height);			
 		}
 		c.stroke();
 
-		c.set_line_width(1.0);
-
 		for (int channel = start; channel <= end; channel++)
 		{
-			double magnitude_scale = 150.0f;
-			if ((start == 0) || (start == 9))
-				magnitude_scale = 300.0f;
 
-			double y = (channel + 1 - start) * magnitude_scale * 0.5 + (height - (end - start + 2) * magnitude_scale * 0.5) * 0.5;
+			double y = (channel + 1 - start) * magnitude_scale * 2 + (height - (end - start + 2) * magnitude_scale * 2) * 0.5;
 
 			c.set_line_width(0.25);
-			c.move_to(0, y);
-			c.line_to(width, y);	
+			for (int k = -2; k <= 2; k++)
+			{
+				c.move_to(0.0, y + k * 20.0);
+				c.line_to(width, y + k * 20.0);			
+			}
 			c.stroke();
 
 			c.set_line_width(1.0);
-			c.move_to(40, y + 40);
+			c.move_to(40.0, y + 40.0);
 			c.show_text(channels_names[channel]);
+			c.move_to(200.0, y + 40.0);
+			// double magnitude = ecg.get_magnitude(channel, first_frame);
+			// c.show_text(@"level: $magnitude");
 
 			c.move_to(0, y);
 			for (int i = 0; i < (int)(width * 2.0 / scale); i++)

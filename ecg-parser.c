@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdint.h>
 #include "ecg-parser.h"
+#define CACHED_CHANNELS_COUNT 9
 
 struct ECG
 {
@@ -48,7 +49,7 @@ void ecg_cache(ECG *ecg, int first_frame, int last_frame)
 	free(ecg->magnitudes);
 	ecg->first_cached_frame = first_frame;
 	ecg->last_cached_frame = last_frame;
-	ecg->magnitudes = malloc((last_frame - first_frame + 1) * 8 * sizeof(uint16_t));
+	ecg->magnitudes = malloc((last_frame - first_frame + 1) * CACHED_CHANNELS_COUNT * sizeof(uint16_t));
 	for (frame = first_frame; frame <= last_frame; frame++)
 	{
 		unsigned char buffer[14];
@@ -57,19 +58,18 @@ void ecg_cache(ECG *ecg, int first_frame, int last_frame)
 		fseek(ecg->file, chunk_number * 512 + 8 + chunk_position * 14, SEEK_SET);
 		fread(&buffer, 1, 14, ecg->file);
 
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 0] = ((buffer[0] & 0x0F) << 8) + buffer[1];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 1] = ((buffer[0] & 0xF0) << 4) + buffer[2];
 
-		ecg->magnitudes[(frame - first_frame) * 8 + 0] = ((buffer[0] & 0x0F) << 8) + buffer[1];
-		ecg->magnitudes[(frame - first_frame) * 8 + 1] = ((buffer[0] & 0xF0) << 4) + buffer[2];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 2] = ((buffer[3] & 0x0F) << 8) + buffer[4];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 3] = ((buffer[3] & 0xF0) << 4) + buffer[5];
 
-		ecg->magnitudes[(frame - first_frame) * 8 + 2] = ((buffer[3] & 0x0F) << 8) + buffer[4];
-		ecg->magnitudes[(frame - first_frame) * 8 + 3] = ((buffer[3] & 0xF0) << 4) + buffer[5];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 4] = ((buffer[6] & 0x0F) << 8) + buffer[7];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 5] = ((buffer[6] & 0xF0) << 4) + buffer[8];
 
-		ecg->magnitudes[(frame - first_frame) * 8 + 4] = ((buffer[6] & 0x0F) << 8) + buffer[7];
-		ecg->magnitudes[(frame - first_frame) * 8 + 5] = ((buffer[6] & 0xF0) << 4) + buffer[8];
-
-		ecg->magnitudes[(frame - first_frame) * 8 + 6] = ((buffer[9] & 0x0F) << 8) + buffer[10];
-		ecg->magnitudes[(frame - first_frame) * 8 + 7] = ((buffer[9] & 0xF0) << 4) + buffer[11];
-		ecg->magnitudes[(frame - first_frame) * 8 + 8] = 0;//buffer[12];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 6] = ((buffer[9] & 0x0F) << 8) + buffer[10];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 7] = ((buffer[9] & 0xF0) << 4) + buffer[11];
+		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 8] = buffer[12];
 	}
 }
 
@@ -117,7 +117,7 @@ int ecg_get_integer_magnitude(ECG *ecg, int channel, int frame)
 	    (frame > ecg->last_cached_frame))
 		magnitude = ecg_read(ecg, channel, frame);
 	else
-		magnitude = ecg->magnitudes[(frame - ecg->first_cached_frame) * 8 + channel];
+		magnitude = ecg->magnitudes[(frame - ecg->first_cached_frame) * CACHED_CHANNELS_COUNT + channel];
 
 	return magnitude;
 }
@@ -132,21 +132,21 @@ float ecg_get_magnitude(ECG *ecg, ECGChannel channel, int frame)
 	case ECG_CHANNEL_I:
 		return ecg_get_magnitude(ecg, ECG_CHANNEL_II, frame) - ecg_get_magnitude(ecg, ECG_CHANNEL_III, frame);
 	case ECG_CHANNEL_II:
-		return (ecg_get_integer_magnitude(ecg, 0, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 0, frame) * -2e-3f) + 4.096f;
 	case ECG_CHANNEL_III:
-		return (ecg_get_integer_magnitude(ecg, 1, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 1, frame) * -2e-3f) + 4.096f;
 	case ECG_CHANNEL_V1:
-		return (ecg_get_integer_magnitude(ecg, 7, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 7, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V2:
-		return (ecg_get_integer_magnitude(ecg, 6, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 6, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V3:
-		return (ecg_get_integer_magnitude(ecg, 5, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 5, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V4:
-		return (ecg_get_integer_magnitude(ecg, 4, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 4, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V5:
-		return (ecg_get_integer_magnitude(ecg, 3, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 3, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V6:
-		return (ecg_get_integer_magnitude(ecg, 2, frame) / 4095.0f) * 2.0f - 1.0f;
+		return (ecg_get_integer_magnitude(ecg, 2, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_AVR:
 		return (ecg_get_magnitude(ecg, ECG_CHANNEL_I, frame) + ecg_get_magnitude(ecg, ECG_CHANNEL_II, frame)) / -2.0f;
 	case ECG_CHANNEL_AVL:

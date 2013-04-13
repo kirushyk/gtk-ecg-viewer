@@ -1,9 +1,9 @@
-public class MainWindow: Gtk.Window
+public class MainWindow: Gtk.ApplicationWindow
 {
 
-	public MainWindow()
+	public MainWindow(Gtk.Application application)
 	{
-		title = "ECG Viewer";
+ 		Object (application: application, title: "ECG Viewer");
 		border_width = 0;
 		window_position = Gtk.WindowPosition.CENTER;
 		set_default_size(800, 600);
@@ -15,6 +15,7 @@ public class MainWindow: Gtk.Window
 		{
 			this.destroy();
 		});
+		//application.set_menubar(menu);
 		box.pack_start(menu, false, true, 0);
 
 		var monitor = new ECGMonitor();
@@ -36,6 +37,13 @@ public class MainWindow: Gtk.Window
 			monitor.set_ecg_shift((int)scrollbar.get_value());
         	});
 		box.pack_start(scrollbar, false, true, 0);
+		this.key_press_event.connect(() =>
+		{
+			int new_shift = monitor.get_ecg_shift();
+			new_shift++;
+			monitor.set_ecg_shift(new_shift);
+			return true;
+		});
 
 		add(box);
 	}

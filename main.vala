@@ -8,7 +8,7 @@ public class App: Gtk.Application
 
 	protected override void activate()
 	{
-		Gtk.Window window = new MainWindow();
+		Gtk.Window window = new MainWindow(this);
 		window.show_all();
 		add_window(window);
 	}
