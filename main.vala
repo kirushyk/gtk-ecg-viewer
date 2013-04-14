@@ -3,7 +3,7 @@ public class App: Gtk.Application
 
 	public App()
 	{
-		Object(application_id: "org.gnome.cardio", flags: ApplicationFlags.FLAGS_NONE);
+		Object(application_id: "org.gnome.ecg-viewer", flags: ApplicationFlags.FLAGS_NONE);
 	}
 
 	protected override void activate()
