@@ -1,3 +1,6 @@
+#ifndef _ECG_PARSER_H_
+#define _ECG_PARSER_H_
+
 typedef struct ECG ECG;
 
 typedef enum ECGChannel
@@ -34,4 +37,6 @@ int                ecg_get_frames_count                   (ECG                *e
 float              ecg_get_frame_rate                     (ECG                *ecg);
 
 void               ecg_close                              (ECG                *ecg);
+
+#endif
 

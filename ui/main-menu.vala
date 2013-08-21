@@ -48,9 +48,13 @@ public class MainMenu: Gtk.MenuBar
 		{
         		var file_chooser = new Gtk.FileChooserDialog("Open File", null, Gtk.FileChooserAction.OPEN, Gtk.Stock.CANCEL, Gtk.ResponseType.CANCEL, Gtk.Stock.OPEN, Gtk.ResponseType.ACCEPT);
 			var filter = new Gtk.FileFilter();
-			filter.set_filter_name("ECG");
+			filter.set_filter_name("TLC 5000 DUMP (*.bin)");
 			filter.add_pattern("*.bin");
 			filter.add_pattern("*.BIN");
+			file_chooser.add_filter(filter);
+			filter = new Gtk.FileFilter();
+			filter.set_filter_name("TLC 5000 ECG (*.ecg)");
+			filter.add_pattern("*.ecg");
 			file_chooser.add_filter(filter);
         		if (file_chooser.run() == Gtk.ResponseType.ACCEPT)
 			{

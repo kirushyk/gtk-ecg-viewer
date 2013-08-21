@@ -1,37 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include <math.h>
 #include <stdint.h>
 #include "ecg-parser.h"
-#define CACHED_CHANNELS_COUNT 9
+#include "tlc5000.bin.h"
+#include "tlc5000.ecg.h"
+
+typedef enum ECGFormat
+{
+	ECG_TYPE_TLC5000_BIN,
+	ECG_TYPE_TLC5000_ECG
+} ECGFormat;
 
 struct ECG
 {
-	FILE                          *file;
-	int                            first_cached_frame;
-	int                            last_cached_frame;
-	int                            frames_count;
-	uint16_t                      *magnitudes;
+	ECGFormat                      format;
+	void                          *priv;
 };
 
 ECG * ecg_open(const char *filename)
 {
-	ECG *ecg = malloc(sizeof(ECG));
-	ecg->file = fopen(filename, "rb");
-	if (ecg->file)
+	int length = strlen(filename);
+	if (length >= 4)
+	if (strcasecmp(filename + length - 3, "bin") == 0)
 	{
-		fseek(ecg->file, 0, SEEK_END);
-		ecg->frames_count = ftell(ecg->file) / 512 * 36;
-		ecg->first_cached_frame = -1;
-		ecg->last_cached_frame = -1;
-		ecg->magnitudes = NULL;
+		ECG *ecg = malloc(sizeof(ECG));
+		ecg->format = ECG_TYPE_TLC5000_BIN;
+		ecg->priv = tlc5000_bin_open(filename);
+		return ecg;
 	}
-	else
+	else if (strcasecmp(filename + length - 3, "ecg") == 0)
 	{
-		free(ecg);
-		ecg = NULL;
+		return NULL;
 	}
-	return ecg;
+
+	fprintf(stderr, "Unknown file format: %s", filename);
+	return NULL;
+
 }
 
 void ecg_cache(ECG *ecg, int first_frame, int last_frame)
@@ -39,37 +46,20 @@ void ecg_cache(ECG *ecg, int first_frame, int last_frame)
 	if (ecg == NULL)
 		return;
 
-	int frame;
-	if ((last_frame < first_frame) ||
-	    (first_frame > ecg->frames_count) ||
-	    (last_frame > ecg->frames_count) ||
-	    (first_frame < 0) ||
-	    (last_frame < 0))
+	if (ecg->priv == NULL)
 		return;
-	free(ecg->magnitudes);
-	ecg->first_cached_frame = first_frame;
-	ecg->last_cached_frame = last_frame;
-	ecg->magnitudes = malloc((last_frame - first_frame + 1) * CACHED_CHANNELS_COUNT * sizeof(uint16_t));
-	for (frame = first_frame; frame <= last_frame; frame++)
+
+	switch (ecg->format)
 	{
-		unsigned char buffer[14];
-		int chunk_number = frame / 36;
-		int chunk_position = frame - chunk_number * 36;
-		fseek(ecg->file, chunk_number * 512 + 8 + chunk_position * 14, SEEK_SET);
-		fread(&buffer, 1, 14, ecg->file);
+	case ECG_TYPE_TLC5000_BIN:
+		tlc5000_bin_cache(ecg->priv, first_frame, last_frame);
+		break;
 
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 0] = ((buffer[0] & 0x0F) << 8) + buffer[1];
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 1] = ((buffer[0] & 0xF0) << 4) + buffer[2];
+	case ECG_TYPE_TLC5000_ECG:
+		break;
 
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 2] = ((buffer[3] & 0x0F) << 8) + buffer[4];
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 3] = ((buffer[3] & 0xF0) << 4) + buffer[5];
-
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 4] = ((buffer[6] & 0x0F) << 8) + buffer[7];
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 5] = ((buffer[6] & 0xF0) << 4) + buffer[8];
-
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 6] = ((buffer[9] & 0x0F) << 8) + buffer[10];
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 7] = ((buffer[9] & 0xF0) << 4) + buffer[11];
-		ecg->magnitudes[(frame - first_frame) * CACHED_CHANNELS_COUNT + 8] = buffer[12];
+	default:
+		break;
 	}
 }
 
@@ -78,84 +68,45 @@ void ecg_clear_cache(ECG *ecg)
 	if (ecg == NULL)
 		return;
 
-	free(ecg->magnitudes);
-	ecg->magnitudes = NULL;
-	ecg->first_cached_frame = -1;
-	ecg->last_cached_frame = -1;
+	if (ecg->priv == NULL)
+		return;
+
+	switch (ecg->format)
+	{
+	case ECG_TYPE_TLC5000_BIN:
+		tlc5000_bin_clear_cache(ecg->priv);
+		break;
+
+	case ECG_TYPE_TLC5000_ECG:
+		break;
+
+	default:
+		break;
+	}
 }
 
-int ecg_read(ECG *ecg, size_t channel, size_t frame) 
-{
-	if (ecg == NULL)
-		return 0;
-
-	unsigned char buffer[4];
-	int chunk_number = frame / 36;
-	int chunk_position = frame - chunk_number * 36;
-	fseek(ecg->file, chunk_number * 512 + 8 + chunk_position * 14 + (channel / 2 * 3), SEEK_SET);
-	if (fread(&buffer, 1, 3, ecg->file) != 3)
-		return 0;
-	if (channel == 8)
-		return buffer[0];
-	return (channel & 1) ?
-		((buffer[0] & 0xF0) << 4) + buffer[2] :
-		((buffer[0] & 0x0F) << 8) + buffer[1];
-
-}
-
-int ecg_get_integer_magnitude(ECG *ecg, int channel, int frame)
-{
-	int magnitude = 0;
-
-	if (ecg == NULL)
-		return magnitude;
-
-	if ((ecg->magnitudes == NULL) ||
-	    (ecg->first_cached_frame == -1) || 
-	    (ecg->last_cached_frame == -1) ||
-	    (frame < ecg->first_cached_frame) ||
-	    (frame > ecg->last_cached_frame))
-		magnitude = ecg_read(ecg, channel, frame);
-	else
-		magnitude = ecg->magnitudes[(frame - ecg->first_cached_frame) * CACHED_CHANNELS_COUNT + channel];
-
-	return magnitude;
-}
 
 float ecg_get_magnitude(ECG *ecg, ECGChannel channel, int frame)
 {
+	fprintf(stderr, "ecg: %p\n", ecg);
 	if (ecg == NULL)
 		return 0.0f;
 
-	switch (channel)
+	if (ecg->priv == NULL)
+		return 0.0f;
+
+	switch (ecg->format)
 	{
-	case ECG_CHANNEL_I:
-		return ecg_get_magnitude(ecg, ECG_CHANNEL_II, frame) - ecg_get_magnitude(ecg, ECG_CHANNEL_III, frame);
-	case ECG_CHANNEL_II:
-		return (ecg_get_integer_magnitude(ecg, 0, frame) * -2e-3f) + 4.096f;
-	case ECG_CHANNEL_III:
-		return (ecg_get_integer_magnitude(ecg, 1, frame) * -2e-3f) + 4.096f;
-	case ECG_CHANNEL_V1:
-		return (ecg_get_integer_magnitude(ecg, 7, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_V2:
-		return (ecg_get_integer_magnitude(ecg, 6, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_V3:
-		return (ecg_get_integer_magnitude(ecg, 5, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_V4:
-		return (ecg_get_integer_magnitude(ecg, 4, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_V5:
-		return (ecg_get_integer_magnitude(ecg, 3, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_V6:
-		return (ecg_get_integer_magnitude(ecg, 2, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_AVR:
-		return (ecg_get_magnitude(ecg, ECG_CHANNEL_I, frame) + ecg_get_magnitude(ecg, ECG_CHANNEL_II, frame)) / -2.0f;
-	case ECG_CHANNEL_AVL:
-		return ecg_get_magnitude(ecg, ECG_CHANNEL_I, frame) - ecg_get_magnitude(ecg, ECG_CHANNEL_II, frame) / -2.0f;
-	case ECG_CHANNEL_AVF:
-		return ecg_get_magnitude(ecg, ECG_CHANNEL_II, frame) - ecg_get_magnitude(ecg, ECG_CHANNEL_I, frame) / -2.0f;
-	case ECG_CHANNEL_X:
-		return ecg_get_integer_magnitude(ecg, 8, frame) / 255.0f;
+	case ECG_TYPE_TLC5000_BIN:
+		return tlc5000_bin_get_magnitude(ecg->priv, channel, frame);
+
+	case ECG_TYPE_TLC5000_ECG:
+		return 0.0f;
+
+	default:
+		return 0.0f;
 	}
+
 	return 0.0f;
 }
 
@@ -164,12 +115,44 @@ int ecg_get_frames_count(ECG *ecg)
 	if (ecg == NULL)
 		return 0;
 
-	return ecg->frames_count;
+	if (ecg->priv == NULL)
+		return 0;
+
+	switch (ecg->format)
+	{
+	case ECG_TYPE_TLC5000_BIN:
+		return tlc5000_bin_get_frames_count(ecg->priv);
+
+	case ECG_TYPE_TLC5000_ECG:
+		return 0;
+
+	default:
+		return 0;
+	}
+		
+	return 0;
 }
 
 float ecg_get_frame_rate(ECG *ecg)
 {
-	return 200.0f;
+	if (ecg == NULL)
+		return;
+
+	if (ecg->priv == NULL)
+		return;
+
+	switch (ecg->format)
+	{
+	case ECG_TYPE_TLC5000_BIN:
+		tlc5000_bin_get_frame_rate(ecg->priv);
+		break;
+
+	case ECG_TYPE_TLC5000_ECG:
+		break;
+
+	default:
+		break;
+	}
 }
 
 void ecg_close(ECG *ecg)
@@ -177,10 +160,22 @@ void ecg_close(ECG *ecg)
 	if (ecg == NULL)
 		return;
 
-	free(ecg->magnitudes);
-	fclose(ecg->file);
-	free(ecg);
-	return;
-}
+	if (ecg->priv == NULL)
+		return;
 
+	switch (ecg->format)
+	{
+	case ECG_TYPE_TLC5000_BIN:
+		tlc5000_bin_close(ecg->priv);
+		break;
+
+	case ECG_TYPE_TLC5000_ECG:
+		break;
+
+	default:
+		break;
+	}
+
+	free(ecg);
+}
 

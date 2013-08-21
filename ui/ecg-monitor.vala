@@ -127,7 +127,6 @@ public class ECGMonitor: Gtk.DrawingArea
 
 		for (int channel = start; channel <= end; channel++)
 		{
-
 			double y = (channel + 1 - start) * magnitude_scale * 2 + (height - (end - start + 2) * magnitude_scale * 2) * 0.5;
 
 			c.set_line_width(0.25);
@@ -148,7 +147,7 @@ public class ECGMonitor: Gtk.DrawingArea
 			c.move_to(0, y);
 			for (int i = 0; i < (int)(width * 2.0 / scale); i++)
 			{
-				c.line_to(i * scale * 0.5, y - ecg.get_magnitude(channel, i + first_frame) * magnitude_scale);
+				// c.line_to(i * scale * 0.5, y - ecg.get_magnitude(channel, i + first_frame) * magnitude_scale);
 			}
 			c.stroke();
 		}
