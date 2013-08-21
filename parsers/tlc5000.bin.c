@@ -17,7 +17,7 @@ struct TLC5000Bin
 
 TLC5000Bin * tlc5000_bin_open(const char *filename)
 {
-	TLC5000Bin *priv;
+	TLC5000Bin *priv = malloc(sizeof(TLC5000Bin));
 	priv->file = fopen(filename, "rb");
 	if (priv->file)
 	{
@@ -128,7 +128,6 @@ int tlc5000_bin_get_integer_magnitude(TLC5000Bin *priv, int channel, int frame)
 
 float tlc5000_bin_get_magnitude(TLC5000Bin *priv, ECGChannel channel, int frame)
 {
-	fprintf(stderr, "priv: %p\n", priv);
 	if (priv == NULL)
 		return 0.0f;
 
@@ -188,7 +187,6 @@ void tlc5000_bin_close(TLC5000Bin *priv)
 	fclose(priv->file);
 	free(priv->magnitudes);
 	free(priv);
-	fprintf(stderr, "Closed\n");
 	return;
 }
 

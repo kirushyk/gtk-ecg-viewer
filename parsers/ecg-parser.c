@@ -88,7 +88,6 @@ void ecg_clear_cache(ECG *ecg)
 
 float ecg_get_magnitude(ECG *ecg, ECGChannel channel, int frame)
 {
-	fprintf(stderr, "ecg: %p\n", ecg);
 	if (ecg == NULL)
 		return 0.0f;
 
@@ -160,20 +159,20 @@ void ecg_close(ECG *ecg)
 	if (ecg == NULL)
 		return;
 
-	if (ecg->priv == NULL)
-		return;
-
-	switch (ecg->format)
+	if (ecg->priv != NULL)
 	{
-	case ECG_TYPE_TLC5000_BIN:
-		tlc5000_bin_close(ecg->priv);
-		break;
+		switch (ecg->format)
+		{
+		case ECG_TYPE_TLC5000_BIN:
+			tlc5000_bin_close(ecg->priv);
+			break;
 
-	case ECG_TYPE_TLC5000_ECG:
-		break;
+		case ECG_TYPE_TLC5000_ECG:
+			break;
 
-	default:
-		break;
+		default:
+			break;
+		}
 	}
 
 	free(ecg);
