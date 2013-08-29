@@ -33,7 +33,10 @@ ECG * ecg_open(const char *filename)
 	}
 	else if (strcasecmp(filename + length - 3, "ecg") == 0)
 	{
-		return NULL;
+		ECG *ecg = malloc(sizeof(ECG));
+		ecg->format = ECG_TYPE_TLC5000_ECG;
+		ecg->priv = tlc5000_ecg_open(filename);
+		return ecg;
 	}
 
 	fprintf(stderr, "Unknown file format: %s", filename);
@@ -56,6 +59,7 @@ void ecg_cache(ECG *ecg, int first_frame, int last_frame)
 		break;
 
 	case ECG_TYPE_TLC5000_ECG:
+		tlc5000_ecg_cache(ecg->priv, first_frame, last_frame);
 		break;
 
 	default:
@@ -78,6 +82,7 @@ void ecg_clear_cache(ECG *ecg)
 		break;
 
 	case ECG_TYPE_TLC5000_ECG:
+		tlc5000_ecg_clear_cache(ecg->priv);
 		break;
 
 	default:
@@ -100,7 +105,7 @@ float ecg_get_magnitude(ECG *ecg, ECGChannel channel, int frame)
 		return tlc5000_bin_get_magnitude(ecg->priv, channel, frame);
 
 	case ECG_TYPE_TLC5000_ECG:
-		return 0.0f;
+		return tlc5000_ecg_get_magnitude(ecg->priv, channel, frame);
 
 	default:
 		return 0.0f;
@@ -123,7 +128,7 @@ int ecg_get_frames_count(ECG *ecg)
 		return tlc5000_bin_get_frames_count(ecg->priv);
 
 	case ECG_TYPE_TLC5000_ECG:
-		return 0;
+		return tlc5000_ecg_get_frames_count(ecg->priv);
 
 	default:
 		return 0;
@@ -147,6 +152,7 @@ float ecg_get_frame_rate(ECG *ecg)
 		break;
 
 	case ECG_TYPE_TLC5000_ECG:
+		tlc5000_ecg_get_frame_rate(ecg->priv);
 		break;
 
 	default:
@@ -168,6 +174,7 @@ void ecg_close(ECG *ecg)
 			break;
 
 		case ECG_TYPE_TLC5000_ECG:
+			tlc5000_ecg_close(ecg->priv);
 			break;
 
 		default:
