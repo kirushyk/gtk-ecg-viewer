@@ -92,7 +92,7 @@ int tlc5000_ecg_read(TLC5000Ecg *priv, int channel, int frame)
 	int value;
 	uint8_t buffer[2];
 
-	fseek(priv->file, frame * 24, SEEK_SET);
+	fseek(priv->file, frame * 24 + channel * 2, SEEK_SET);
 	if (fread(buffer, 1, 2, priv->file) != 2)
 		return 0;
 
@@ -132,29 +132,29 @@ float tlc5000_ecg_get_magnitude(TLC5000Ecg *priv, ECGChannel channel, int frame)
 	switch (channel)
 	{
 	case ECG_CHANNEL_I:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 0, frame) * -2e-3f) + 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 0, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_II:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 1, frame) * -2e-3f) + 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 1, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_III:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 2, frame) * -2e-3f) + 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 2, frame) * 2e-3f) - 4.096f;
+	case ECG_CHANNEL_AVF:
+		return (tlc5000_ecg_get_integer_magnitude(priv, 5, frame) * 2e-3f) - 4.096f;
+	case ECG_CHANNEL_AVL:
+		return (tlc5000_ecg_get_integer_magnitude(priv, 4, frame) * 2e-3f) - 4.096f;
+	case ECG_CHANNEL_AVR:
+		return (tlc5000_ecg_get_integer_magnitude(priv, 3, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V1:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 8, frame) * 2e-3f) - 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 6, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V2:
 		return (tlc5000_ecg_get_integer_magnitude(priv, 7, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V3:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 6, frame) * 2e-3f) - 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 8, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V4:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 5, frame) * 2e-3f) - 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 9, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V5:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 4, frame) * 2e-3f) - 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 10, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_V6:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 3, frame) * 2e-3f) - 4.096f;
-	case ECG_CHANNEL_AVR:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 9, frame) * -2e-3f) + 4.096f;
-	case ECG_CHANNEL_AVL:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 10, frame) * -2e-3f) + 4.096f;
-	case ECG_CHANNEL_AVF:
-		return (tlc5000_ecg_get_integer_magnitude(priv, 11, frame) * -2e-3f) + 4.096f;
+		return (tlc5000_ecg_get_integer_magnitude(priv, 11, frame) * 2e-3f) - 4.096f;
 	case ECG_CHANNEL_X:
 		return 0.0f;
 	}
