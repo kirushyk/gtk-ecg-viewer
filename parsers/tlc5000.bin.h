@@ -1,6 +1,6 @@
 #ifndef _TLC5000_BIN_H_
-#	define _TLC5000_BIN_H_
-#	include <ecg-parser.h>
+#   define _TLC5000_BIN_H_
+#   include <ecg-parser.h>
 
 typedef struct TLC5000Bin TLC5000Bin;
 

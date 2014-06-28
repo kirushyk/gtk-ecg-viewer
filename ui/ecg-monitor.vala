@@ -51,9 +51,10 @@ public class ECGMonitor: Gtk.DrawingArea
 		// Timeout.add(1000, update);
 	}
 
-	public int get_ecg_size()
+	public int get_max_shift()
 	{
-		return ecg.get_frames_count();
+		int width = get_allocated_width();
+		return ecg.get_frames_count() - width * 2;
 	}
 
 	public int get_ecg_shift()

@@ -5,19 +5,19 @@ typedef struct ECG ECG;
 
 typedef enum ECGChannel
 {
-	ECG_CHANNEL_I,
-	ECG_CHANNEL_II,
-	ECG_CHANNEL_III,
-	ECG_CHANNEL_V1,
-	ECG_CHANNEL_V2,
-	ECG_CHANNEL_V3,
-	ECG_CHANNEL_V4,
-	ECG_CHANNEL_V5,
-	ECG_CHANNEL_V6,
-	ECG_CHANNEL_AVR,
-	ECG_CHANNEL_AVL,
-	ECG_CHANNEL_AVF,
-	ECG_CHANNEL_X
+    ECG_CHANNEL_I,
+    ECG_CHANNEL_II,
+    ECG_CHANNEL_III,
+    ECG_CHANNEL_V1,
+    ECG_CHANNEL_V2,
+    ECG_CHANNEL_V3,
+    ECG_CHANNEL_V4,
+    ECG_CHANNEL_V5,
+    ECG_CHANNEL_V6,
+    ECG_CHANNEL_AVR,
+    ECG_CHANNEL_AVL,
+    ECG_CHANNEL_AVF,
+    ECG_CHANNEL_X
 } ECGChannel;
 
 ECG *              ecg_open                               (const char         *filename);
@@ -39,4 +39,3 @@ float              ecg_get_frame_rate                     (ECG                *e
 void               ecg_close                              (ECG                *ecg);
 
 #endif
-

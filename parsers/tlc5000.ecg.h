@@ -1,6 +1,6 @@
 #ifndef _TLC5000_ECG_H_
-#	define _TLC5000_ECG_H_
-#	include <ecg-parser.h>
+#   define _TLC5000_ECG_H_
+#   include <ecg-parser.h>
 
 typedef struct TLC5000Ecg TLC5000Ecg;
 
