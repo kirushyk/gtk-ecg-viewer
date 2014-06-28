@@ -25,36 +25,17 @@ TLC5000Bin * tlc5000_bin_open(const char *filename)
     if (priv->file)
     {
         fseek(priv->file, 0, SEEK_END);
-        int chunks_count =  ftell(priv->file) / CHUNK_SIZE;
+        int chunks_count = ftell(priv->file) / CHUNK_SIZE;
         priv->frames_count = chunks_count * FRAMES_PER_CHUNK;
         priv->first_cached_frame = -1;
         priv->last_cached_frame = -1;
         priv->magnitudes = NULL;
         priv->frame_rate = 200.0f;
 
+        fseek(priv->file, -512, SEEK_CUR);
         int index = 0;
-        int chunk_number = 0;
-        int larger_step = 1024;
-        for (chunk_number = 0; chunk_number < chunks_count; chunk_number += larger_step)
-        {
-            fseek(priv->file, chunk_number * CHUNK_SIZE, SEEK_SET);
-            fread(&index, 4, 1, priv->file);
-            if (index != chunk_number)
-            {
-                for (chunk_number -= (larger_step - 1); chunk_number < chunks_count; chunk_number++)
-                {
-                    fseek(priv->file, chunk_number * CHUNK_SIZE, SEEK_SET);
-                    fread(&index, 4, 1, priv->file);
-                    if (index != chunk_number)
-                    {
-                        priv->frames_count = chunk_number * FRAMES_PER_CHUNK;
-                        break;
-                    }
-                }
-                priv->frames_count = chunk_number * FRAMES_PER_CHUNK;
-                break;
-            }
-        }
+        fread(&index, 4, 1, priv->file);
+        priv->frames_count = index * FRAMES_PER_CHUNK;
     }
     else
     {
