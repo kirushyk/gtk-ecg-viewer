@@ -142,23 +142,21 @@ int ecg_get_frames_count(ECG *ecg)
 float ecg_get_frame_rate(ECG *ecg)
 {
     if (ecg == NULL)
-        return;
+        return 0;
 
     if (ecg->priv == NULL)
-        return;
+        return 0;
 
     switch (ecg->format)
     {
     case ECG_TYPE_TLC5000_BIN:
-        tlc5000_bin_get_frame_rate(ecg->priv);
-        break;
+        return tlc5000_bin_get_frame_rate(ecg->priv);
 
     case ECG_TYPE_TLC5000_ECG:
-        tlc5000_ecg_get_frame_rate(ecg->priv);
-        break;
-
+        return tlc5000_ecg_get_frame_rate(ecg->priv);
+            
     default:
-        break;
+        return 0;
     }
 }
 
