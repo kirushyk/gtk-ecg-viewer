@@ -10,3 +10,9 @@ Electrocardiogram viewer with Gtk+ user interface written in Vala.
 Currently supported file formats:
 * [TLC5000](https://www.rdsm.eu/TLC5000.html) .bin
 * TLC5000 .ecg
+
+## License
+
+Copyright &copy; 2013 Kyrylo Polezhaiev. All rights reserved.
+
+ECG Viewer is released under the [MIT](LICENSE) License.
