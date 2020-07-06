@@ -1,3 +1,5 @@
+ecg-viewer
+*.dSYM/
 build/
 builddir/
 *~
