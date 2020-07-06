@@ -56,11 +56,11 @@ public class MainMenu: Gtk.MenuBar
 			filter.set_filter_name("TLC 5000 ECG (*.ecg)");
 			filter.add_pattern("*.ecg");
 			file_chooser.add_filter(filter);
-        		if (file_chooser.run() == Gtk.ResponseType.ACCEPT)
+        	if (file_chooser.run() == Gtk.ResponseType.ACCEPT)
 			{
-            			this.open_file_item_activated(file_chooser.get_filename());
-        		}
-        		file_chooser.destroy();
+            	this.open_file_item_activated(file_chooser.get_filename());
+			}
+			file_chooser.destroy();
 		});
 		var quit_item = new Gtk.MenuItem.with_label("Quit");
 		quit_item.activate.connect(() => {quit_item_activated();});

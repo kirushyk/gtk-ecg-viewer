@@ -36,7 +36,7 @@ public class MainWindow: Gtk.ApplicationWindow
 		scrollbar.value_changed.connect(() =>
 		{
 			monitor.set_ecg_shift((int)scrollbar.get_value());
-        	});
+        });
 		box.pack_start(scrollbar, false, true, 0);
 		this.key_press_event.connect((source, key) => 
 		{
