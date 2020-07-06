@@ -1,8 +1,0 @@
-SRC = main.vala main-window.vala ecg-monitor.vala main-menu.vala 
-CSRC = main.c main-window.c ecg-monitor.c main-menu.c ../parsers/ecg-parser.c ../parsers/tlc5000.ecg.c ../parsers/tlc5000.bin.c
-PACKAGES = --pkg gtk+-3.0 --pkg ecg-parser
-TARGET = ecg-viewer.exe
-$(TARGET):
-	valac $(PACKAGES) -X -lm -X -I. -X -I../parsers/ --vapidir=../parsers/ -C $(SRC)
-	i686-w64-mingw32-gcc $(CSRC) -mwindows -I. -I../parsers/ `i686-w64-mingw32-pkg-config --cflags --libs gtk+-3.0` -o $(TARGET)
-
