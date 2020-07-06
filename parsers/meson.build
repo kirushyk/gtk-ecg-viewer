@@ -4,6 +4,6 @@ parsers_sources = [
     'tlc5000.ecg.c'
 ]
 
-parsers = static_library('parsers', parsers_sources
+parsers = static_library('parsers', parsers_sources,
     install: false
 )

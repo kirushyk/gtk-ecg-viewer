@@ -15,7 +15,7 @@ if gtk.found()
     executable('gtk-ecg-viewer', ui_sources,
         dependencies: gtk,
         include_directories: incdir,
-        link_with: parsrs,
+        link_with: parsers,
         install: true
     )
 endif
