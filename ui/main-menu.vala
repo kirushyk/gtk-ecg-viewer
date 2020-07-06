@@ -46,7 +46,7 @@ public class MainMenu: Gtk.MenuBar
 		file_menu.add(open_item);
 		open_item.activate.connect(() =>
 		{
-        		var file_chooser = new Gtk.FileChooserDialog("Open File", null, Gtk.FileChooserAction.OPEN, Gtk.Stock.CANCEL, Gtk.ResponseType.CANCEL, Gtk.Stock.OPEN, Gtk.ResponseType.ACCEPT);
+        	var file_chooser = new Gtk.FileChooserDialog("Open File", null, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
 			var filter = new Gtk.FileFilter();
 			filter.set_filter_name("TLC 5000 DUMP (*.bin)");
 			filter.add_pattern("*.bin");
