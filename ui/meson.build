@@ -14,6 +14,7 @@ gtk = dependency('gtk+-3.0',
 if gtk.found()
     executable('gtk-ecg-viewer', ui_sources,
         dependencies: gtk,
+        vala_args: ['--pkg', 'ecg-parser'],
         include_directories: incdir,
         link_with: parsers,
         install: true
