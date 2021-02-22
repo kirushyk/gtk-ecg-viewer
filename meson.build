@@ -5,7 +5,7 @@ project('gtk-ecg-viewer', 'c', 'vala',
     version: '0.0.3',
     meson_version: '>= 0.54.0',
     default_options: [
-        'c_std=c89',
+        'c_std=c99',
         'warning_level=1',
         'buildtype=debug'
     ]
