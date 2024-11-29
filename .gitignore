@@ -3,3 +3,5 @@ ecg-viewer
 build/
 builddir/
 *~
+.vscode/
+
