@@ -12,4 +12,5 @@ project('gtk-ecg-viewer', 'c', 'vala',
 )
 
 subdir('parsers')
+subdir('tools')
 subdir('ui')
