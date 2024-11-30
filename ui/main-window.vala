@@ -1,7 +1,7 @@
 public class MainWindow: Gtk.ApplicationWindow
 {
 
-	public MainWindow(Gtk.Application application)
+	public MainWindow(Gtk.Application application, string path)
 	{
  		Object(application: application, title: "ECG Viewer");
 		border_width = 0;
@@ -20,8 +20,11 @@ public class MainWindow: Gtk.ApplicationWindow
 		box.pack_start(menu, false, true, 0);
 
 		var monitor = new ECGMonitor();
-
 		var scrollbar = new Gtk.Scrollbar(Gtk.Orientation.HORIZONTAL, null);
+		if (path != null) {
+			monitor.load(path);
+			scrollbar.set_range(0, monitor.get_max_shift());
+		}
 
 		menu.open_file_item_activated.connect((path) => 
 		{
