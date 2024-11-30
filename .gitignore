@@ -1,7 +1,6 @@
-ecg-viewer
 *.dSYM/
 build/
 builddir/
 *~
 .vscode/
-
+*.BIN
