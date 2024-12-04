@@ -1,7 +1,7 @@
 public class MainWindow: Gtk.ApplicationWindow
 {
 
-	public MainWindow(Gtk.Application application, string path)
+	public MainWindow(Gtk.Application application, string? path)
 	{
  		Object(application: application, title: "ECG Viewer");
 		border_width = 0;
