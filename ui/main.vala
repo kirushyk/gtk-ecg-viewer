@@ -9,7 +9,11 @@ public class App: Gtk.Application
 	protected override void activate()
 	{
 		Gtk.Window window = new MainWindow(this, null);
-		window.show_all();
+#if HAVE_GTK4
+			window.show();
+#else
+			window.show_all();
+#endif
 		add_window(window);
 	}
 
@@ -17,7 +21,11 @@ public class App: Gtk.Application
 	{
 		foreach (var filename in files) {
 			Gtk.Window window = new MainWindow(this, filename.get_path());
+#if HAVE_GTK4
+			window.show();
+#else
 			window.show_all();
+#endif
 			add_window(window);
 		}
 	}

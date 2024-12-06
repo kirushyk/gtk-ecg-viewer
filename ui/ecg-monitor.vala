@@ -43,9 +43,13 @@ public class ECGMonitor: Gtk.DrawingArea
 
 	public ECGMonitor()
 	{
+#if HAVE_GTK4
+		set_draw_func(draw_event);
+#else
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK |
 		           Gdk.EventMask.BUTTON_RELEASE_MASK |
 		           Gdk.EventMask.POINTER_MOTION_MASK);
+#endif
 		set_size_request(200, 225);
 
 		// Timeout.add(1000, update);
@@ -83,10 +87,18 @@ public class ECGMonitor: Gtk.DrawingArea
 		update();
 	}
 
+#if HAVE_GTK4
+	public void draw_event(Gtk.DrawingArea d, Cairo.Context c, int w, int h)
+#else
 	public override bool draw(Cairo.Context c)
+#endif
 	{
 		if (ecg == null)
+#if HAVE_GTK4
+			return;
+#else
 			return true;
+#endif
 
 		string channels_names[14] = 
 		{
@@ -155,9 +167,14 @@ public class ECGMonitor: Gtk.DrawingArea
 			c.stroke();
 		}
 		c.stroke();
+#if HAVE_GTK4
+		return;
+#else
 		return true;
+#endif
 	}
 
+#if !HAVE_GTK4
 	public override bool button_press_event(Gdk.EventButton event)
 	{
 		return false;
@@ -184,10 +201,13 @@ public class ECGMonitor: Gtk.DrawingArea
 		var region = window.get_clip_region();
 		window.invalidate_region(region, true);
 	}
+#endif
 
 	private bool update()
 	{
+#if !HAVE_GTK4
 		redraw_canvas();
+#endif
 		return true;
 	}
 

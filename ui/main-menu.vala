@@ -1,6 +1,5 @@
 public class MainMenu: Gtk.MenuBar
 {
-	
 	public signal void quit_item_activated();
 
 	public signal void open_file_item_activated(string path); 
@@ -11,7 +10,6 @@ public class MainMenu: Gtk.MenuBar
 
 	public MainMenu()
 	{
-
 		var file_item = new Gtk.MenuItem.with_label("File");
 
 		var view_item = new Gtk.MenuItem.with_label("View");
